@@ -3,18 +3,13 @@
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
-import {
-  FiUser,
-  FiMail,
-  FiPhone,
-  FiMapPin,
-  FiArrowRight,
-  FiGlobe,
-} from "react-icons/fi";
+import { FiUser, FiMail, FiPhone, FiMapPin, FiArrowRight, FiGlobe } from "react-icons/fi";
 import { useBooking } from "@/context/BookingContext";
 import { format } from "date-fns";
 import { useToast } from "@/context/ToastContext";
 import { useCurrency } from "@/context/CurrencyContext";
+
+const PAYMENT_DOWN_MESSAGE = "Payment is down currently. Please contact us on WhatsApp for reservation.";
 
 interface Country {
   name: string;
@@ -35,9 +30,7 @@ export default function UserInfoPage() {
   const [countryCode, setCountryCode] = useState("");
   const [phone, setPhone] = useState("");
   const [pickupLocation, setPickupLocation] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<"stripe" | "commercepay">(
-    "stripe",
-  );
+  const [paymentMethod, setPaymentMethod] = useState<"stripe" | "commercepay">("stripe");
 
   const [pickupOptions, setPickupOptions] = useState<string[]>([]);
   const [countries, setCountries] = useState<Country[]>([]);
@@ -48,18 +41,14 @@ export default function UserInfoPage() {
     const fetchCountries = async () => {
       try {
         // Try to fetch from REST Countries API
-        const response = await fetch(
-          "https://restcountries.com/v3.1/all?fields=name,cca2,idd",
-        );
+        const response = await fetch("https://restcountries.com/v3.1/all?fields=name,cca2,idd");
         if (response.ok) {
           const data = await response.json();
           const formattedCountries: Country[] = data
             .map((country: any) => ({
               name: country.name.common,
               cca2: country.cca2,
-              callingCode: country.idd?.root
-                ? `${country.idd.root}${country.idd.suffixes?.[0] || ""}`
-                : "",
+              callingCode: country.idd?.root ? `${country.idd.root}${country.idd.suffixes?.[0] || ""}` : "",
             }))
             .filter((c: Country) => c.callingCode)
             .sort((a: Country, b: Country) => a.name.localeCompare(b.name));
@@ -72,10 +61,7 @@ export default function UserInfoPage() {
           throw new Error("API failed");
         }
       } catch (error) {
-        console.warn(
-          "Failed to fetch countries from API, using fallback list:",
-          error,
-        );
+        console.warn("Failed to fetch countries from API, using fallback list:", error);
         // Fallback to hardcoded list
         const allCountries: Country[] = [
           { name: "Malaysia", cca2: "MY", callingCode: "+60" },
@@ -190,10 +176,7 @@ export default function UserInfoPage() {
       <div className="min-h-screen bg-neutral-50 flex items-center justify-center px-4">
         <div className="text-center">
           <p className="text-text-secondary mb-4">No booking details found.</p>
-          <Link
-            href="/tours"
-            className="px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary-dark transition-colors"
-          >
+          <Link href="/tours" className="px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary-dark transition-colors">
             Browse Tours
           </Link>
         </div>
@@ -203,6 +186,10 @@ export default function UserInfoPage() {
 
   const priceNum = booking.totalPrice ? booking.totalPrice : 0;
   const finalPrice = priceNum;
+
+  const handlePyamentSystemDownMsg = () => {
+    alert(PAYMENT_DOWN_MESSAGE);
+  };
 
   const handleNext = useCallback(() => {
     // Validation
@@ -285,34 +272,15 @@ export default function UserInfoPage() {
 
     // Route to selected payment gateway
     if (paymentMethod === "commercepay") {
-      router.push(
-        `/payment-commercepay?booking=${encodedBookingData}&amount=${finalPrice}`,
-      );
+      router.push(`/payment-commercepay?booking=${encodedBookingData}&amount=${finalPrice}`);
     } else {
       // Default to Stripe
-      router.push(
-        `/payment?bookingData=${encodedBookingData}&amount=${finalPrice}`,
-      );
+      router.push(`/payment?bookingData=${encodedBookingData}&amount=${finalPrice}`);
     }
-  }, [
-    fullName,
-    email,
-    countryCode,
-    phone,
-    pickupLocation,
-    pickupOptions,
-    booking,
-    priceNum,
-    finalPrice,
-    paymentMethod,
-    router,
-    showToast,
-  ]);
+  }, [fullName, email, countryCode, phone, pickupLocation, pickupOptions, booking, priceNum, finalPrice, paymentMethod, router, showToast]);
 
   // Format Date for Display
-  const displayDate = booking.date
-    ? format(new Date(booking.date), "d MMM yyyy")
-    : "";
+  const displayDate = booking.date ? format(new Date(booking.date), "d MMM yyyy") : "";
 
   return (
     <div className="min-h-screen bg-neutral-50 pt-24 pb-16 px-4">
@@ -358,13 +326,9 @@ export default function UserInfoPage() {
           </div>
           <div className="bg-white border border-neutral-200 shadow-soft rounded-2xl p-6 space-y-6">
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-text-light mb-2">
-                Step 2
-              </p>
+              <p className="text-xs uppercase tracking-[0.2em] text-text-light mb-2">Step 2</p>
               <h1 className="text-2xl font-semibold">Guest information</h1>
-              <p className="text-sm text-text-secondary mt-1">
-                We only collect what we need for pickups and confirmations.
-              </p>
+              <p className="text-sm text-text-secondary mt-1">We only collect what we need for pickups and confirmations.</p>
             </div>
 
             <div className="grid md:grid-cols-2 gap-4">
@@ -372,13 +336,7 @@ export default function UserInfoPage() {
                 Full name
                 <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-neutral-200 bg-white">
                   <FiUser className="text-secondary" />
-                  <input
-                    type="text"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Alex Tan"
-                    className="w-full bg-transparent outline-none focus:ring-0 focus:outline-none focus:shadow-none text-text-primary"
-                  />
+                  <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Alex Tan" className="w-full bg-transparent outline-none focus:ring-0 focus:outline-none focus:shadow-none text-text-primary" />
                 </div>
               </label>
 
@@ -386,13 +344,7 @@ export default function UserInfoPage() {
                 Email
                 <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-neutral-200 bg-white">
                   <FiMail className="text-secondary" />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    className="w-full bg-transparent focus:border-none outline-none focus:ring-0 focus:outline-none focus:shadow-none text-text-primary"
-                  />
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="w-full bg-transparent focus:border-none outline-none focus:ring-0 focus:outline-none focus:shadow-none text-text-primary" />
                 </div>
               </label>
 
@@ -401,15 +353,8 @@ export default function UserInfoPage() {
                 <div className="grid grid-cols-[140px_1fr] gap-2">
                   <div className="flex items-center gap-2 px-3 py-3 rounded-xl border border-neutral-200 bg-white">
                     <FiGlobe className="text-secondary flex-shrink-0" />
-                    <select
-                      value={countryCode}
-                      onChange={(e) => setCountryCode(e.target.value)}
-                      className="w-full bg-transparent outline-none focus:ring-0 focus:outline-none focus:shadow-none text-text-primary text-sm"
-                      disabled={loadingCountries}
-                    >
-                      <option value="">
-                        {loadingCountries ? "Loading..." : "Country"}
-                      </option>
+                    <select value={countryCode} onChange={(e) => setCountryCode(e.target.value)} className="w-full bg-transparent outline-none focus:ring-0 focus:outline-none focus:shadow-none text-text-primary text-sm" disabled={loadingCountries}>
+                      <option value="">{loadingCountries ? "Loading..." : "Country"}</option>
                       {countries.map((country) => (
                         <option key={country.cca2} value={country.callingCode}>
                           {country.name} {country.callingCode}
@@ -417,53 +362,23 @@ export default function UserInfoPage() {
                       ))}
                     </select>
                   </div>
-                  <div
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl border border-neutral-200 ${
-                      !countryCode
-                        ? "bg-neutral-100 cursor-not-allowed"
-                        : "bg-white"
-                    }`}
-                  >
+                  <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border border-neutral-200 ${!countryCode ? "bg-neutral-100 cursor-not-allowed" : "bg-white"}`}>
                     <FiPhone className="text-secondary" />
-                    <input
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder={
-                        countryCode ? "12-345 6789" : "Select country first"
-                      }
-                      disabled={!countryCode}
-                      className={`w-full bg-transparent outline-none focus:ring-0 focus:outline-none focus:shadow-none text-text-primary ${
-                        !countryCode
-                          ? "cursor-not-allowed text-neutral-400"
-                          : ""
-                      }`}
-                    />
+                    <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={countryCode ? "12-345 6789" : "Select country first"} disabled={!countryCode} className={`w-full bg-transparent outline-none focus:ring-0 focus:outline-none focus:shadow-none text-text-primary ${!countryCode ? "cursor-not-allowed text-neutral-400" : ""}`} />
                   </div>
                 </div>
-                {!countryCode && (
-                  <p className="text-xs text-amber-600 mt-1">
-                    Please select a country before entering your phone number
-                  </p>
-                )}
+                {!countryCode && <p className="text-xs text-amber-600 mt-1">Please select a country before entering your phone number</p>}
               </label>
 
               <label className="flex flex-col gap-2 text-sm font-medium text-text-primary">
                 Pickup location
                 <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-neutral-200 bg-white ">
                   <FiMapPin className="text-secondary" />
-                  <input
-                    type="text"
-                    value={pickupLocation}
-                    onChange={(e) => setPickupLocation(e.target.value)}
-                    placeholder="Enter your hotel name or pickup location"
-                    className="w-full bg-transparent outline-none focus:ring-0 focus:outline-none focus:shadow-none text-text-primary"
-                  />
+                  <input type="text" value={pickupLocation} onChange={(e) => setPickupLocation(e.target.value)} placeholder="Enter your hotel name or pickup location" className="w-full bg-transparent outline-none focus:ring-0 focus:outline-none focus:shadow-none text-text-primary" />
                 </div>
                 {pickupOptions.length > 0 && (
                   <div className="text-xs text-gray-600 mt-1">
-                    <span className="font-medium">Available locations:</span>{" "}
-                    {pickupOptions.join(", ")}
+                    <span className="font-medium">Available locations:</span> {pickupOptions.join(", ")}
                   </div>
                 )}
               </label>
@@ -471,36 +386,17 @@ export default function UserInfoPage() {
 
             {/* Payment Method Selection */}
             <div className="mt-6 pt-6 border-t border-neutral-200 space-y-3">
-              <label className="block text-sm font-semibold text-gray-900">
-                Payment Method
-              </label>
+              <label className="block text-sm font-semibold text-gray-900">Payment Method</label>
               <div className="grid grid-cols-2 gap-3">
-                <label
-                  className={`relative flex items-center p-3 border-2 rounded-lg cursor-pointer transition-all ${
-                    paymentMethod === "stripe"
-                      ? "border-blue-600 bg-blue-50"
-                      : "border-gray-200 bg-white hover:border-gray-300"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="payment-method"
-                    value="stripe"
-                    checked={paymentMethod === "stripe"}
-                    onChange={() => setPaymentMethod("stripe")}
-                    className="mr-2 cursor-pointer"
-                  />
+                <label className={`relative flex items-center p-3 border-2 rounded-lg cursor-pointer transition-all ${paymentMethod === "stripe" ? "border-blue-600 bg-blue-50" : "border-gray-200 bg-white hover:border-gray-300"}`}>
+                  <input type="radio" name="payment-method" value="stripe" checked={paymentMethod === "stripe"} onChange={() => setPaymentMethod("stripe")} className="mr-2 cursor-pointer" />
                   <span className="text-sm font-medium">Stripe</span>
                 </label>
               </div>
             </div>
 
             <div className="flex flex-col sm:flex-row items-center gap-3 justify-between pt-4">
-              <button
-                onClick={handleNext}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary text-white font-semibold hover:bg-primary-dark transition-colors"
-                disabled={!booking}
-              >
+              <button onClick={handlePyamentSystemDownMsg} className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary text-white font-semibold hover:bg-primary-dark transition-colors" disabled={!booking}>
                 Continue to payment <FiArrowRight />
               </button>
             </div>
@@ -519,9 +415,7 @@ export default function UserInfoPage() {
 
         <aside className="space-y-4 order-1 lg:order-2">
           <div className="bg-white border border-neutral-200 shadow-soft rounded-2xl p-6 space-y-4">
-            <p className="text-xs uppercase tracking-[0.2em] text-text-light">
-              Summary
-            </p>
+            <p className="text-xs uppercase tracking-[0.2em] text-text-light">Summary</p>
             <h3 className="text-lg font-semibold">{booking.title}</h3>
             <div className="space-y-2 text-sm text-text-secondary">
               <div className="flex justify-between">
@@ -545,9 +439,7 @@ export default function UserInfoPage() {
               <div className="flex justify-between items-center">
                 <span className="text-text-secondary text-sm">Total</span>
                 <div className="text-right">
-                  <div className="text-xl font-bold text-primary">
-                    RM {finalPrice.toFixed(2)}
-                  </div>
+                  <div className="text-xl font-bold text-primary">RM {finalPrice.toFixed(2)}</div>
                   <div className="text-xs text-text-secondary">
                     ${convertToUSD(finalPrice)} / €{convertToEUR(finalPrice)}
                   </div>
