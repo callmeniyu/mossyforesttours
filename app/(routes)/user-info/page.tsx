@@ -187,9 +187,6 @@ export default function UserInfoPage() {
   const priceNum = booking.totalPrice ? booking.totalPrice : 0;
   const finalPrice = priceNum;
 
-  const handlePyamentSystemDownMsg = () => {
-    alert(PAYMENT_DOWN_MESSAGE);
-  };
 
   const handleNext = useCallback(() => {
     // Validation
@@ -396,7 +393,7 @@ export default function UserInfoPage() {
             </div>
 
             <div className="flex flex-col sm:flex-row items-center gap-3 justify-between pt-4">
-              <button onClick={handlePyamentSystemDownMsg} className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary text-white font-semibold hover:bg-primary-dark transition-colors" disabled={!booking}>
+              <button onClick={handleNext} className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary text-white font-semibold hover:bg-primary-dark transition-colors" disabled={!booking}>
                 Continue to payment <FiArrowRight />
               </button>
             </div>
